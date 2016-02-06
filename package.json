@@ -1,0 +1,35 @@
+{
+  "name": "kefir.react.atom-todomvc",
+  "private": true,
+  "scripts": {
+    "build": "export NODE_ENV=production && browserify src/todomvc.js -t babelify -t envify -g uglifyify > public/app.js",
+    "lint": "eslint src test",
+    "prepublish": "npm run lint && npm run build",
+    "watch": "watchify src/todomvc.js -v -t [ babelify --sourceMaps=inline ] -o public/app.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "kefir": "^3.2.0",
+    "partial.lenses": "^0.5.1",
+    "ramda": "^0.19.1",
+    "react": "^0.14.3",
+    "react-dom": "^0.14.3",
+    "todomvc-app-css": "^2.0.1"
+  },
+  "devDependencies": {
+    "babel": "^6.3.13",
+    "babel-cli": "^6.3.17",
+    "babel-eslint": "^4.1.6",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.3.16",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-react": "^6.3.13",
+    "babel-preset-stage-2": "^6.3.13",
+    "babelify": "^7.2.0",
+    "browserify": "^12.0.1",
+    "envify": "^3.4.0",
+    "eslint": "^1.10.3",
+    "eslint-plugin-react": "^3.5.1",
+    "uglifyify": "^3.0.1",
+    "watchify": "^3.4.0"
+  }
+}
