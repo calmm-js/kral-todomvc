@@ -1,4 +1,5 @@
 import Kefir from "kefir"
+import L     from "partial.lenses"
 import R     from "ramda"
 
 //
@@ -53,13 +54,13 @@ export function Lens(source, lens, eq = R.equals) {
 
 inherit(Lens, AbstractMutable, {
   get() {
-    return R.view(this._lens, this._source.get())
+    return L.view(this._lens, this._source.get())
   },
   modify(fn) {
-    this._source.modify(R.over(this._lens, fn))
+    this._source.modify(L.over(this._lens, fn))
   },
   _handleValue(context) {
-    const next = R.view(this._lens, context)
+    const next = L.view(this._lens, context)
     const prev = this._currentEvent
     if (!prev || !this._eq(prev.value, next))
       this._emitValue(next)
