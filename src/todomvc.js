@@ -11,12 +11,12 @@ const hash = Kefir.fromEvents(window, "hashchange")
              .map(() => window.location.hash)
 
 const TodoItem = ({model, editing = Atom(false)}) =>
-  <K.li {...classes(K(model.lens(L("completed")), c => c && "completed"),
+  <K.li {...classes(K(model, m => L.view("completed", m) && "completed"),
                     K(editing, e => e && "editing"))}>
     <K.input className="toggle" type="checkbox" hidden={editing}
-             {...bind({checked: model.lens(L("completed"))})}/>
+             {...bind({checked: model.lens("completed")})}/>
     <K.label onDoubleClick={() => editing.set(true)}
-             className="view">{model.lens(L("title"))}</K.label>
+             className="view">{model.lens("title")}</K.label>
     <button className="destroy" onClick={() => model.set()}/>
     {K(editing, e => e && (() => {
       const exit = () => editing.set(false)
@@ -24,9 +24,9 @@ const TodoItem = ({model, editing = Atom(false)}) =>
         {const newTitle = e.target.value.trim()
          exit()
          newTitle === "" ? model.set()
-                         : model.lens(L("title")).set(newTitle)}
+                         : model.lens("title").set(newTitle)}
       return <K.input type="text" onBlur={save} className="edit" key="x"
-               mount={c => c && c.focus()} defaultValue={model.lens(L("title"))}
+               mount={c => c && c.focus()} defaultValue={model.lens("title")}
                onKeyDown={e => e.which === 13 && save(e) ||
                                e.which === 27 && exit()}/>})())}
   </K.li>
@@ -55,7 +55,7 @@ const TodoApp = ({model: m}) => {
         <K.input type="checkbox" className="toggle-all" hidden={m.isEmpty}
           {...bind({checked: m.allDone})}/>
         <K.ul className="todo-list">{Kefir.fromIds(indices, i =>
-          <TodoItem key={i} model={m.all.lens(L(i))}/>)}</K.ul>
+          <TodoItem key={i} model={m.all.lens(i)}/>)}</K.ul>
       </section>
       <K.footer className="footer" hidden={m.isEmpty}>
         <K.span className="todo-count">{K(K(m.all, R.filter(active)),
