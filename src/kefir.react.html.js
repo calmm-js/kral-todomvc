@@ -215,17 +215,16 @@ export const bind = template => ({...template, onChange: ({target}) => {
 
 //
 
-Kefir.fromIds = (ids, fromId) =>
-  ids.scan(([oldIds], ids) => {
-    const newIds = {}
-    const newVs = []
-    ids.forEach(id => {
-      const newV = id in oldIds ? oldIds[id] : fromId(id)
-      newIds[id] = newV
-      newVs.push(newV)
-    })
-    return [newIds, newVs]
-  }, [{}, []]).map(s => s[1])
+Kefir.fromIds = (ids, fromId) => ids.scan(([oldIds], ids) => {
+  const newIds = {}
+  const newVs = []
+  ids.forEach(id => {
+    const newV = id in oldIds ? oldIds[id] : fromId(id)
+    newIds[id] = newV
+    newVs.push(newV)
+  })
+  return [newIds, newVs]
+}, [{}, []]).map(s => s[1])
 
 //
 
