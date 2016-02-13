@@ -16,7 +16,7 @@ const TodoItem = ({model, editing = Atom(false)}) =>
     <K.input className="toggle" type="checkbox" hidden={editing}
              {...bind({checked: model.lens("completed")})}/>
     <K.label onDoubleClick={() => editing.set(true)}
-             className="view">{model.lens("title")}</K.label>
+             className="view">{model.view("title")}</K.label>
     <button className="destroy" onClick={() => model.set()}/>
     {K(editing, e => e && (() => {
       const exit = () => editing.set(false)
@@ -26,7 +26,7 @@ const TodoItem = ({model, editing = Atom(false)}) =>
          newTitle === "" ? model.set()
                          : model.lens("title").set(newTitle)}
       return <K.input type="text" onBlur={save} className="edit" key="x"
-               mount={c => c && c.focus()} defaultValue={model.lens("title")}
+               mount={c => c && c.focus()} defaultValue={model.view("title")}
                onKeyDown={e => e.which === 13 && save(e) ||
                                e.which === 27 && exit()}/>})())}
   </K.li>
