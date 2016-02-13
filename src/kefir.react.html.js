@@ -1,32 +1,6 @@
-import Kefir from "kefir"
-import R     from "ramda"
-import React from "react"
-
-const toObservable = x =>
-  x instanceof Kefir.Observable ? x : Kefir.constant(x)
-
-function array() { return Array.from(arguments) }
-
-const combineAsArray = obs =>
-  obs.length === 1
-  ? toObservable(obs[0]).map(array)
-  : Kefir.combine(obs.map(toObservable), array)
-
-const combineAsObject = template => {
-  const values = []
-  const keys = []
-  for (const key in template) {
-    keys.push(key)
-    values.push(toObservable(template[key]))
-  }
-  return combineAsArray(values).map(values => {
-    const result = {}
-    const n = keys.length
-    for (let i=0; i<n; ++i)
-      result[keys[i]] = values[keys[i]]
-    return result
-  })
-}
+import Kefir   from "kefir"
+import React   from "react"
+import combine from "./combine"
 
 //
 
@@ -34,29 +8,23 @@ export const config = {
   onError: e => {throw e}
 }
 
-const nullState = {dispose: null, rendered: null}
+//
 
 const common = {
-  getInitialState() {
-    return nullState
-  },
-  tryDispose() {
-    const {dispose} = this.state
-    if (dispose)
-      dispose()
-  },
   componentWillReceiveProps(nextProps) {
-    this.trySubscribe(nextProps)
+    this.doUnsubscribe()
+    this.doSubscribe(nextProps)
   },
   componentWillMount() {
-    this.trySubscribe(this.props)
+    this.doUnsubscribe()
+    this.doSubscribe(this.props)
   },
   shouldComponentUpdate(np, ns) {
     return ns.rendered !== this.state.rendered
   },
   componentWillUnmount() {
-    this.tryDispose()
-    this.setState(nullState)
+    this.doUnsubscribe()
+    this.setState(this.getInitialState())
   },
   render() {
     return this.state.rendered
@@ -65,32 +33,43 @@ const common = {
 
 //
 
+const FromKefirNull = {callback: null, rendered: null}
+
 const FromKefir = React.createClass({
   ...common,
-  trySubscribe({kefir}) {
-    this.tryDispose()
-
-    const callback = rendered => {
-      if (!R.equals(this.state.rendered, rendered))
-        this.setState({rendered})
-    }
-
-    kefir.onValue(callback)
-
-    this.setState({dispose: () => kefir.offValue(callback)})
+  getInitialState() {
+    return FromKefirNull
+  },
+  doUnsubscribe() {
+    const {callback} = this.state
+    if (callback)
+      this.props.observable.offValue(callback)
+  },
+  doSubscribe({observable}) {
+    const callback = rendered => this.setState({rendered})
+    observable.onValue(callback)
+    this.setState({callback})
   }
 })
 
-export const fromKefir = kefir =>
-  React.createElement(FromKefir, {kefir})
+export const fromKefir = observable =>
+  React.createElement(FromKefir, {observable})
 
 //
 
+const FromClassNull = {observable: null, callback: null, rendered: null}
+
 const FromClass = React.createClass({
   ...common,
-  trySubscribe({props}) {
-    this.tryDispose()
-
+  getInitialState() {
+    return FromClassNull
+  },
+  doUnsubscribe() {
+    const {observable, callback} = this.state
+    if (callback)
+      observable.offValue(callback)
+  },
+  doSubscribe({Class, props}) {
     const obsStreams = []
 
     for (const key in props) {
@@ -107,7 +86,7 @@ const FromClass = React.createClass({
       }
     }
 
-    const callback = obsVals => {
+    const observable = combine(...obsStreams, function() {
       const newProps = {}
       let newChildren = null
 
@@ -116,20 +95,19 @@ const FromClass = React.createClass({
       for (const key in props) {
         const val = props[key]
         if (val instanceof Kefir.Observable) {
-          const valO = obsVals[++k]
+          const valO = arguments[++k]
           if ("children" === key)
             newChildren = valO
           else if ("mount" === key)
             newProps["ref"] = valO
           else
             newProps[key] = valO
-        } else if ("children" === key &&
-                   val instanceof Array) {
+        } else if ("children" === key && val instanceof Array) {
           newChildren = []
           for (let i=0, n=val.length; i<n; ++i) {
             const valI = val[i]
             newChildren.push(valI instanceof Kefir.Observable
-                             ? obsVals[++k]
+                             ? arguments[++k]
                              : valI)
           }
         } else {
@@ -142,19 +120,12 @@ const FromClass = React.createClass({
         }
       }
 
-      const rendered = React.createElement(this.props.Class,
-                                           newProps,
-                                           newChildren)
+      return React.createElement(Class, newProps, newChildren)
+    })
 
-      if (!R.equals(this.state.rendered, rendered))
-        this.setState({rendered})
-    }
-
-    const observable = combineAsArray(obsStreams)
-
+    const callback = rendered => this.setState({rendered})
     observable.onValue(callback)
-
-    this.setState({dispose: () => observable.offValue(callback)})
+    this.setState({observable, callback})
   }
 })
 
@@ -170,57 +141,38 @@ export const fromClasses = classes => {
 
 //
 
-function K() {
-  const nm1 = arguments.length-1
-  if (1 === nm1) {
-    return toObservable(arguments[0]).map(arguments[1])
-      .skipDuplicates(R.equals).toProperty()
-  } else {
-    const xs = Array(nm1)
-    for (let i=0; i<nm1; ++i) {
-      const x = arguments[i]
-      const c = x && x.constructor
-      if (c === Array)
-        xs[i] = combineAsArray(x)
-      else if (c === Object)
-        xs[i] = combineAsObject(x)
-      else
-        xs[i] = toObservable(x)
-    }
-    return Kefir.combine(xs, arguments[nm1]).skipDuplicates(R.equals)
-  }
-}
+const K = combine
 
-["a", "abbr", "address", "area", "article", "aside", "audio",
- "b", "base", "bdi", "bdo", "big", "blockquote", "body", "br", "button",
- "canvas", "caption", "circle", "cite", "clipPath", "code", "col", "colgroup",
- "data", "datalist", "dd", "defs", "del", "details", "dfn", "dialog", "div", "dl", "dt",
- "ellipse", "em", "embed",
- "fieldset", "figcaption", "figure", "footer", "form",
- "g",
- "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
- "i", "iframe", "image", "img", "input", "ins",
- "kbd", "keygen",
- "label", "legend",
- "li", "line", "linearGradient", "link",
- "main", "map", "mark", "mask", "menu", "menuitem", "meta", "meter",
- "nav", "noscript",
- "object", "ol", "optgroup", "option", "output",
- "p", "param", "path", "pattern", "picture", "polygon", "polyline", "pre", "progress",
- "q",
- "radialGradient", "rect", "rp", "rt", "ruby",
- "s", "samp", "script", "section", "select", "small", "source", "span", "stop", "strong", "style", "sub", "summary", "sup", "svg",
- "table", "tbody", "td", "text", "textarea", "tfoot", "th", "thead", "time", "title", "tr", "track", "tspan",
- "u", "ul",
- "var", "video",
- "wbr"].forEach(c => K[c] = fromClass(c))
+;["a", "abbr", "address", "area", "article", "aside", "audio",
+  "b", "base", "bdi", "bdo", "big", "blockquote", "body", "br", "button",
+  "canvas", "caption", "circle", "cite", "clipPath", "code", "col", "colgroup",
+  "data", "datalist", "dd", "defs", "del", "details", "dfn", "dialog", "div", "dl", "dt",
+  "ellipse", "em", "embed",
+  "fieldset", "figcaption", "figure", "footer", "form",
+  "g",
+  "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
+  "i", "iframe", "image", "img", "input", "ins",
+  "kbd", "keygen",
+  "label", "legend",
+  "li", "line", "linearGradient", "link",
+  "main", "map", "mark", "mask", "menu", "menuitem", "meta", "meter",
+  "nav", "noscript",
+  "object", "ol", "optgroup", "option", "output",
+  "p", "param", "path", "pattern", "picture", "polygon", "polyline", "pre", "progress",
+  "q",
+  "radialGradient", "rect", "rp", "rt", "ruby",
+  "s", "samp", "script", "section", "select", "small", "source", "span", "stop", "strong", "style", "sub", "summary", "sup", "svg",
+  "table", "tbody", "td", "text", "textarea", "tfoot", "th", "thead", "time", "title", "tr", "track", "tspan",
+  "u", "ul",
+  "var", "video",
+  "wbr"].forEach(c => K[c] = fromClass(c))
 
 // Helpers
 
-const classesImmediate = cs => {
+function classesImmediate() {
   let result = ""
-  for (let i=0, n=cs.length; i<n; ++i) {
-    const a = cs[i]
+  for (let i=0, n=arguments.length; i<n; ++i) {
+    const a = arguments[i]
     if (a) {
       if (result)
         result += " "
@@ -231,9 +183,7 @@ const classesImmediate = cs => {
 }
 
 export const classes = (...cs) =>
-  ({className: (cs.find(c => c instanceof Kefir.Observable)
-                ? combineAsArray(cs).map(classesImmediate)
-                : classesImmediate(cs))})
+  ({className: combine(...cs, classesImmediate)})
 
 export const bind = template => ({...template, onChange: ({target}) => {
   for (const k in template)
