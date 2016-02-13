@@ -37,16 +37,15 @@ inherit(AbstractMutable, Kefir.Property, {
   set(value) {
     this.modify(() => value)
   },
-  lens(lens, eq = R.equals) {
-    return new Lens(this, lens, eq)
+  lens(l, ...ls) {
+    return new Lens(this, ls.length === 0 ? l : L(l, ...ls))
   }
 })
 
 //
 
-export function Lens(source, lens, eq = R.equals) {
+export function Lens(source, lens) {
   AbstractMutable.call(this)
-  this._eq = eq
   this._source = source
   this._lens = lens
   this._$handleValue = value => this._handleValue(value)
@@ -62,7 +61,7 @@ inherit(Lens, AbstractMutable, {
   _handleValue(context) {
     const next = L.view(this._lens, context)
     const prev = this._currentEvent
-    if (!prev || !this._eq(prev.value, next))
+    if (!prev || !R.equals(prev.value, next))
       this._emitValue(next)
   },
   _onActivation() {
@@ -75,9 +74,8 @@ inherit(Lens, AbstractMutable, {
 
 //
 
-export function Atom(value, eq = R.equals) {
+export function Atom(value) {
   AbstractMutable.call(this)
-  this._eq = eq
   this._emitValue(value)
 }
 
@@ -87,11 +85,11 @@ inherit(Atom, AbstractMutable, {
   },
   modify(fn) {
     const value = fn(this.get())
-    if (!this._eq(value, this.get()))
+    if (!R.equals(value, this.get()))
       this._emitValue(value)
   }
 })
 
 //
 
-export default (value, eq = R.equals) => new Atom(value, eq)
+export default value => new Atom(value)
