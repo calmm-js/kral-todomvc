@@ -70,7 +70,10 @@ const FromKefir = React.createClass({
   trySubscribe({kefir}) {
     this.tryDispose()
 
-    const callback = rendered => this.setState({rendered})
+    const callback = rendered => {
+      if (!R.equals(this.state.rendered, rendered))
+        this.setState({rendered})
+    }
 
     kefir.onValue(callback)
 
@@ -139,9 +142,12 @@ const FromClass = React.createClass({
         }
       }
 
-      this.setState({rendered: React.createElement(this.props.Class,
-                                                   newProps,
-                                                   newChildren)})
+      const rendered = React.createElement(this.props.Class,
+                                           newProps,
+                                           newChildren)
+
+      if (!R.equals(this.state.rendered, rendered))
+        this.setState({rendered})
     }
 
     const observable = combineAsArray(obsStreams)
