@@ -86,41 +86,60 @@ const FromClass = React.createClass({
   trySubscribe({props}) {
     this.tryDispose()
 
-    const vals = {}
-    const obsKeys = []
     const obsStreams = []
 
     for (const key in props) {
       const val = props[key]
-      const keyOut = "mount" === key ? "ref" : key
       if (val instanceof Kefir.Observable) {
-        obsKeys.push(keyOut)
         obsStreams.push(val)
       } else if ("children" === key &&
-                 val instanceof Array &&
-                 val.find(c => c instanceof Kefir.Observable)) {
-        obsKeys.push(keyOut)
-        obsStreams.push(combineAsArray(val))
-      } else {
-        vals[keyOut] = val
+                 val instanceof Array) {
+        for (let i=0, n=val.length; i<n; ++i) {
+          const valI = val[i]
+          if (valI instanceof Kefir.Observable)
+            obsStreams.push(valI)
+        }
       }
     }
 
     const callback = obsVals => {
-      const props = {}
-      let children = null
-      for (const key in vals) {
-        const val = vals[key]
-        if ("children" === key) {children = val} else {props[key] = val}
+      const newProps = {}
+      let newChildren = null
+
+      let k = -1
+
+      for (const key in props) {
+        const val = props[key]
+        if (val instanceof Kefir.Observable) {
+          const valO = obsVals[++k]
+          if ("children" === key)
+            newChildren = valO
+          else if ("mount" === key)
+            newProps["ref"] = valO
+          else
+            newProps[key] = valO
+        } else if ("children" === key &&
+                   val instanceof Array) {
+          newChildren = []
+          for (let i=0, n=val.length; i<n; ++i) {
+            const valI = val[i]
+            newChildren.push(valI instanceof Kefir.Observable
+                             ? obsVals[++k]
+                             : valI)
+          }
+        } else {
+          if ("children" === key)
+            newChildren = val
+          else if ("mount" === key)
+            newProps["ref"] = val
+          else
+            newProps[key] = val
+        }
       }
-      for (let i=0, n=obsKeys.length; i<n; ++i) {
-        const key = obsKeys[i]
-        const val = obsVals[i]
-        if ("children" === key) {children = val} else {props[key] = val}
-      }
+
       this.setState({rendered: React.createElement(this.props.Class,
-                                                   props,
-                                                   children)})
+                                                   newProps,
+                                                   newChildren)})
     }
 
     const observable = combineAsArray(obsStreams)
