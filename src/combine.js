@@ -1,41 +1,65 @@
 import Kefir from "kefir"
 import R     from "ramda"
 
-function extract(template, observables) {
+function forEach(template, fn) {
   if (template instanceof Kefir.Observable) {
-    observables.push(template)
+    fn(template)
   } else {
     const constructor = template && template.constructor
 
     if (constructor === Array)
       for (let i=0, n=template.length; i<n; ++i)
-        extract(template[i], observables)
+        forEach(template[i], fn)
     else if (constructor === Object)
       for (const k in template)
-        extract(template[k], observables)
+        forEach(template[k], fn)
   }
-  return observables
 }
 
-function combine(template, state) {
+function count(template) {
+  let count = 0
+  forEach(template, () => count += 1)
+  return count
+}
+
+function subscribe(template, handlers, self) {
+  let index = -1
+  forEach(template, observable => {
+    const i = ++index
+    const handler = e => self._handleAny(i, e)
+    handlers[i] = handler
+    observable.onAny(handler)
+  })
+}
+
+function unsubscribe(template, handlers) {
+  let index = -1
+  forEach(template, observable => {
+    const handler = handlers[++index]
+    if (handler)
+      observable.offAny(handler)
+  })
+}
+
+function combine(template, values, state) {
   if (template instanceof Kefir.Observable) {
-    return state.values[++state.index]
+    return values[++state.index]
   } else {
     const constructor = template && template.constructor
 
     if (constructor === Array) {
-      const result = []
+      const next = []
       for (let i=0, n=template.length; i<n; ++i)
-        result[i] = combine(template[i], state)
-      return result
+        next.push(combine(template[i], values, state))
+      return next
     } else if (constructor === Object) {
-      const result = {}
+      const next = {}
       for (const k in template)
-        result[k] = combine(template[k], state)
-      return result
+        next[k] = combine(template[k], values, state)
+      return next
+    } else {
+      return template
     }
-
-    return template
   }
 }
 
@@ -50,68 +74,62 @@ function invoke(xs) {
     : xs
 }
 
+const NO_VALUE = {}
+
 class CombineMany extends Kefir.Property {
-  constructor(template) {
+  constructor(template, n) {
     super()
     this._template = template
+    this._handlers = n
+    this._values = null
   }
-
   _onActivation() {
-    this._handlers = Array()
-    this._observables = extract(this._template, [])
-    this._values = Array()
-    this._observables.forEach((obs, i) => {
-      const handler = e => this._handleAny(i, e)
-      this._handlers[i] = handler
-      obs.onAny(handler)
-    })
+    const template = this._template
+    const n = this._handlers
+    const handlers = Array(n)
+    const values = Array(n)
+    for (let i=0; i<n; ++i) {
+      values[i] = NO_VALUE
+      handlers[i] = NO_VALUE
+    }
+    this._handlers = handlers
+    this._values = values
+    subscribe(template, handlers, this)
   }
-
   _handleAny(i, e) {
     switch (e.type) {
       case "value": {
-        this._values[i] = e.value
-
-        if (Object.keys(this._values).length === this._observables.length) {
-          const next =
-            invoke(combine(this._template, {index: -1, values: this._values}))
-
+        const values = this._values
+        values[i] = e.value
+        if (!values.find(x => x === NO_VALUE)) {
+          const next = invoke(combine(this._template, values, {index: -1}))
           const prev = this._currentEvent
           if (!prev || !R.equals(prev.value, next))
             this._emitValue(next)
         }
-
         break
       }
-
       case "error": {
         this._emitError(e.value)
-
         break
       }
-
       case "end": {
-        delete this._observables[i]
-        delete this._handlers[i]
-
-        if (Object.keys(this._observables).length === 0) {
-          delete this._handlers
-          delete this._observables
-          delete this._values
+        const handlers = this._handlers
+        handlers[i] = null
+        if (!handlers.find(x => x)) {
+          this._handlers = handlers.length
+          this._values = null
           this._emitEnd()
         }
-
         break
       }
     }
   }
-
   _onDeactivation() {
-    const {_handlers, _observables} = this
-    delete this._handlers
-    delete this._observables
-    delete this._values
-    _observables.forEach((obs, i) => obs.offAny(_handlers[i]))
+    const handlers = this._handlers
+    this._handlers = handlers.length
+    this._values = null
+    unsubscribe(this._template, handlers)
   }
 }
 
@@ -119,19 +137,17 @@ class CombineOne extends Kefir.Property {
   constructor(template) {
     super()
     this._template = template
+    this._handler = null
   }
-
   _onActivation() {
-    this._observables = extract(this._template, [])[0]
-    this._handlers = e => this._handleAny(e)
-    this._observables.onAny(this._handlers)
+    const handler = e => this._handleAny(e)
+    this._handler = handler
+    forEach(this._template, observable => observable.onAny(handler))
   }
-
   _handleAny(e) {
     switch (e.type) {
       case "value": {
-        const next =
-          invoke(combine(this._template, {index: -1, values: [e.value]}))
+        const next = invoke(combine(this._template, [e.value], {index: -1}))
         const prev = this._currentEvent
         if (!prev || !R.equals(prev.value, next))
           this._emitValue(next)
@@ -142,34 +158,30 @@ class CombineOne extends Kefir.Property {
         break
       }
       case "end": {
-        delete this._handlers
-        delete this._observables
+        this._handler = null
         this._emitEnd()
         break
       }
     }
   }
-
   _onDeactivation() {
-    const {_handlers, _observables} = this
-    delete this._handlers
-    delete this._observables
-    _observables.offAny(_handlers)
+    const {_handler} = this
+    this._handler = null
+    forEach(this._template, observable => observable.offAny(_handler))
   }
 }
 
 class CombineOneWith extends Kefir.Property {
-  constructor(x, fn) {
+  constructor(observable, fn) {
     super()
-    this._observables = x
+    this._observable = observable
     this._fn = fn
   }
-
   _onActivation() {
-    this._handlers = e => this._handleAny(e)
-    this._observables.onAny(this._handlers)
+    const handler = e => this._handleAny(e)
+    this._handler = handler
+    this._observable.onAny(handler)
   }
-
   _handleAny(e) {
     switch (e.type) {
       case "value": {
@@ -184,28 +196,28 @@ class CombineOneWith extends Kefir.Property {
         break
       }
       case "end": {
-        this._handlers = null
+        this._handler = null
         this._emitEnd()
         break
       }
     }
   }
-
   _onDeactivation() {
-    const {_handlers, _observables} = this
-    delete this._handlers
-    _observables.offAny(_handlers)
+    const {_handler, _observable} = this
+    this._handler = null
+    _observable.offAny(_handler)
   }
 }
 
 export default (...template) => {
-  switch (extract(template, []).length) {
+  const n = count(template)
+  switch (n) {
     case 0: return invoke(template)
     case 1: return (template.length === 2 &&
                     template[0] instanceof Kefir.Observable &&
                     template[1] instanceof Function
                     ? new CombineOneWith(template[0], template[1])
                     : new CombineOne(template))
-    default: return new CombineMany(template)
+    default: return new CombineMany(template, n)
   }
 }

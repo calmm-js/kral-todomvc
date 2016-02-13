@@ -123,9 +123,13 @@ const FromClass = React.createClass({
       return React.createElement(Class, newProps, newChildren)
     })
 
-    const callback = rendered => this.setState({rendered})
-    observable.onValue(callback)
-    this.setState({observable, callback})
+    if (observable instanceof Kefir.Observable) {
+      const callback = rendered => this.setState({rendered})
+      observable.onValue(callback)
+      this.setState({observable, callback})
+    } else {
+      this.setState({observable: null, callback: null, rendered: observable})
+    }
   }
 })
 
