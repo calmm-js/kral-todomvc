@@ -51,7 +51,7 @@ export function Lens(source, lens) {
   AbstractMutable.call(this)
   this._source = source
   this._lens = lens
-  this._$handleValue = value => this._handleValue(value)
+  this._$handleValue = null
 }
 
 inherit(Lens, AbstractMutable, {
@@ -68,10 +68,13 @@ inherit(Lens, AbstractMutable, {
       this._emitValue(next)
   },
   _onActivation() {
-    this._source.onValue(this._$handleValue)
+    const handleValue = value => this._handleValue(value)
+    this._$handleValue = handleValue
+    this._source.onValue(handleValue)
   },
   _onDeactivation() {
     this._source.offValue(this._$handleValue)
+    this._$handleValue = null
   }
 })
 
