@@ -11,7 +11,7 @@ const hash = Kefir.fromEvents(window, "hashchange")
              .map(() => window.location.hash)
 
 const TodoItem = ({model, editing = Atom(false)}) =>
-  <K.li {...classes(K(model, m => L.view("completed", m) && "completed"),
+  <K.li {...classes(K(model, m => m.completed && "completed"),
                     K(editing, e => e && "editing"))}>
     <K.input className="toggle" type="checkbox" hidden={editing}
              {...bind({checked: model.lens("completed")})}/>
