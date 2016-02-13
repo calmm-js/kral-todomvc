@@ -39,6 +39,9 @@ inherit(AbstractMutable, Kefir.Property, {
   },
   lens(l, ...ls) {
     return new Lens(this, ls.length === 0 ? l : L(l, ...ls))
+  },
+  view(l, ...ls) {
+    return this.lens(l, ...ls)
   }
 })
 
