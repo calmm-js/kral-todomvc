@@ -72,6 +72,8 @@ const FromKefir = React.createClass({
 
     const callback = rendered => this.setState({rendered})
 
+    kefir.onValue(callback)
+
     this.setState({dispose: () => kefir.offValue(callback)})
   }
 })
