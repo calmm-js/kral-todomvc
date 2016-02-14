@@ -11,6 +11,7 @@
   "dependencies": {
     "kefir": "^3.2.0",
     "kefir-atom": "^1.0.0",
+    "kefir-react-html": "^1.0.0",
     "partial.lenses": "^0.5.1",
     "ramda": "^0.19.1",
     "react": "^0.14.3",

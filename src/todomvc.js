@@ -1,5 +1,5 @@
 import Atom from "kefir-atom"
-import K, {bind, classes, fromIds} from "./kefir.react.html"
+import K, {bind, classes, fromIds} from "kefir-react-html"
 import Kefir from "kefir"
 import L from "partial.lenses"
 import R from "ramda"
