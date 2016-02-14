@@ -1,5 +1,5 @@
 import Atom from "kefir-atom"
-import K, {bind, classes} from "./kefir.react.html"
+import K, {bind, classes, fromIds} from "./kefir.react.html"
 import Kefir from "kefir"
 import L from "partial.lenses"
 import R from "ramda"
@@ -54,7 +54,7 @@ const TodoApp = ({model: m}) => {
       <section className="main">
         <K.input type="checkbox" className="toggle-all" hidden={m.isEmpty}
           {...bind({checked: m.allDone})}/>
-        <K.ul className="todo-list">{Kefir.fromIds(indices, i =>
+        <K.ul className="todo-list">{fromIds(indices, i =>
           <TodoItem key={i} model={m.all.lens(i)}/>)}</K.ul>
       </section>
       <K.footer className="footer" hidden={m.isEmpty}>

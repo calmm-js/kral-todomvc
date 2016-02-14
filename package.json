@@ -1,5 +1,5 @@
 {
-  "name": "kefir.react.atom-todomvc",
+  "name": "kefir-react-atom-todomvc",
   "private": true,
   "scripts": {
     "build": "export NODE_ENV=production && browserify src/todomvc.js -t babelify -t envify -g uglifyify > public/app.js",

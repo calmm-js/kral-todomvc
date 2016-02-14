@@ -1,6 +1,7 @@
 import Kefir   from "kefir"
+import R       from "ramda"
 import React   from "react"
-import combine from "./combine"
+import * as Combine from "./combine"
 
 //
 
@@ -33,6 +34,7 @@ const common = {
 
 //
 
+const FromKefirEnd = {callback: null}
 const FromKefirNull = {callback: null, rendered: null}
 
 const FromKefir = React.createClass({
@@ -43,11 +45,23 @@ const FromKefir = React.createClass({
   doUnsubscribe() {
     const {callback} = this.state
     if (callback)
-      this.props.observable.offValue(callback)
+      this.props.observable.offAny(callback)
   },
   doSubscribe({observable}) {
-    const callback = rendered => this.setState({rendered})
-    observable.onValue(callback)
+    const callback = e => {
+      switch (e.type) {
+        case "value":
+          this.setState({rendered: e.value})
+          break
+        case "error":
+          config.onError(e.value)
+          break
+        case "end":
+          this.setState(FromKefirEnd)
+          break
+      }
+    }
+    observable.onAny(callback)
     this.setState({callback})
   }
 })
@@ -57,6 +71,7 @@ export const fromKefir = observable =>
 
 //
 
+const FromClassEnd = {observable: null, callback: null}
 const FromClassNull = {observable: null, callback: null, rendered: null}
 
 const FromClass = React.createClass({
@@ -67,7 +82,7 @@ const FromClass = React.createClass({
   doUnsubscribe() {
     const {observable, callback} = this.state
     if (callback)
-      observable.offValue(callback)
+      observable.offAny(callback)
   },
   doSubscribe({Class, props}) {
     const obsStreams = []
@@ -86,7 +101,7 @@ const FromClass = React.createClass({
       }
     }
 
-    const observable = combine(...obsStreams, function() {
+    const observable = Combine.asStream(...obsStreams, function() {
       const newProps = {}
       let newChildren = null
 
@@ -124,8 +139,23 @@ const FromClass = React.createClass({
     })
 
     if (observable instanceof Kefir.Observable) {
-      const callback = rendered => this.setState({rendered})
-      observable.onValue(callback)
+      const callback = e => {
+        switch (e.type) {
+          case "value": {
+            const {value} = e
+            if (!R.equals(this.state.rendered, value))
+              this.setState({rendered: value})
+            break
+          }
+          case "error":
+            config.onError(e.value)
+            break
+          case "end":
+            this.setState(FromClassEnd)
+            break
+        }
+      }
+      observable.onAny(callback)
       this.setState({observable, callback})
     } else {
       this.setState({observable: null, callback: null, rendered: observable})
@@ -145,7 +175,7 @@ export const fromClasses = classes => {
 
 //
 
-const K = combine
+const K = Combine.asProperty
 
 ;["a", "abbr", "address", "area", "article", "aside", "audio",
   "b", "base", "bdi", "bdo", "big", "blockquote", "body", "br", "button",
@@ -187,7 +217,7 @@ function classesImmediate() {
 }
 
 export const classes = (...cs) =>
-  ({className: combine(...cs, classesImmediate)})
+  ({className: Combine.asProperty(...cs, classesImmediate)})
 
 export const bind = template => ({...template, onChange: ({target}) => {
   for (const k in template)
@@ -196,7 +226,7 @@ export const bind = template => ({...template, onChange: ({target}) => {
 
 //
 
-Kefir.fromIds = (ids, fromId) => ids.scan(([oldIds], ids) => {
+export const fromIds = (ids, fromId) => ids.scan(([oldIds], ids) => {
   const newIds = {}
   const newVs = []
   ids.forEach(id => {
