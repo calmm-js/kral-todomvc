@@ -1,3 +1,5 @@
+[![](https://david-dm.org/dirty-js/kefir-react-atom-todomvc.svg)](https://david-dm.org/dirty-js/kefir-react-atom-todomvc)
+
 To test locally
 
 ```bash
