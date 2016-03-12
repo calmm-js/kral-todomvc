@@ -1,12 +1,11 @@
-[![](https://david-dm.org/calmm-js/kefir.react.atom-todomvc.svg)](https://david-dm.org/calmm-js/kefir.react.atom-todomvc)
+[![Build Status](https://travis-ci.org/calmm-js/kral-todomvc.svg?branch=master)](https://travis-ci.org/calmm-js/kral-todomvc) [![](https://david-dm.org/calmm-js/kral-todomvc.svg)](https://david-dm.org/calmm-js/kral-todomvc) [![](https://david-dm.org/calmm-js/kral-todomvc/dev-status.svg)](https://david-dm.org/calmm-js/kral-todomvc#info=devDependencies)
 
 To test locally
 
 ```bash
-git clone https://github.com/calmm-js/kefir.react.atom-todomvc.git
-cd kefir.react.atom-todomvc
+git clone https://github.com/calmm-js/kral-todomvc.git
+cd kral-todomvc
 npm install
-npm run build
 ```
 
-and then point browser to `kefir.react.atom-todomvc/public/index.html`.
+and then `open public/index.html`.
