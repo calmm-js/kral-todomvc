@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/calmm-js/kral-todomvc.svg?branch=master)](https://travis-ci.org/calmm-js/kral-todomvc) [![](https://david-dm.org/calmm-js/kral-todomvc.svg)](https://david-dm.org/calmm-js/kral-todomvc) [![](https://david-dm.org/calmm-js/kral-todomvc/dev-status.svg)](https://david-dm.org/calmm-js/kral-todomvc#info=devDependencies)
+[![Build Status](https://travis-ci.org/calmm-js/kral-todomvc.svg?branch=master)](https://travis-ci.org/calmm-js/kral-todomvc) [![](https://david-dm.org/calmm-js/kral-todomvc.svg)](https://david-dm.org/calmm-js/kral-todomvc) [![](https://david-dm.org/calmm-js/kral-todomvc/dev-status.svg)](https://david-dm.org/calmm-js/kral-todomvc#info=devDependencies) [![Gitter](https://img.shields.io/gitter/room/calmm-js/chat.js.svg?style=flat-square)](https://gitter.im/calmm-js)
 
 To test locally
 
