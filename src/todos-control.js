@@ -46,7 +46,7 @@ const Todo = ({todo, editing = Atom(false)}) =>
                                       e.which === 27 && exit()}/>})())}
   </K.li>
 
-const NewTodo = ({onEntry}) =>  
+const NewTodo = ({onEntry}) =>
   <input className="new-todo"
          type="text"
          autoFocus
