@@ -30,6 +30,7 @@ const Todo = ({todo, editing = Atom(false)}) =>
     <button className="destroy"
             onClick={() => todo.modify(M.Todo.remove)}/>
     {K(editing, e => e && (() => {
+      const focus = e => {e.focus(); e.selectionStart = e.value.length}
       const exit = () => editing.set(false)
       const save = e =>
         {const newTitle = e.target.value.trim()
@@ -40,7 +41,7 @@ const Todo = ({todo, editing = Atom(false)}) =>
                       type="text"
                       onBlur={save}
                       key="x"
-                      mount={c => c && c.focus()}
+                      mount={c => c && focus(c)}
                       defaultValue={todo.view(M.Todo.title)}
                       onKeyDown={e => e.which === 13 && save(e) ||
                                       e.which === 27 && exit()}/>})())}
