@@ -43,8 +43,8 @@ const Todo = ({todo, editing = Atom(false)}) =>
                       key="x"
                       mount={c => c && focus(c)}
                       defaultValue={todo.view(M.Todo.title)}
-                      onKeyDown={e => e.which === 13 && save(e) ||
-                                      e.which === 27 && exit()}/>})())}
+                      onKeyDown={e => e.key === "Enter"  && save(e)
+                                   || e.key === "Escape" && exit()}/>})())}
   </K.li>
 
 const NewTodo = ({onEntry}) =>
