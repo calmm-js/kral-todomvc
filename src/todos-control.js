@@ -103,7 +103,10 @@ const All = ({all}) =>
         </K.button>
       </K.footer>
     </section>
-    <footer className="info"><p>Double-click to edit a todo</p></footer>
+    <footer className="info">
+      <p>Double-click to edit a todo</p>
+      <p><a href="https://github.com/calmm-js/kral-todomvc">GitHub</a></p>
+    </footer>
   </div>
 
 export default ({todos}) => <All all={todos.lens(M.Todos.all)}/>
