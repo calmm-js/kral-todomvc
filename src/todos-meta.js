@@ -1,5 +1,5 @@
-import L from "partial.lenses"
-import R from "ramda"
+import * as L from "partial.lenses"
+import R      from "ramda"
 
 const completed = "completed"
 const isCompleted = R.prop(completed)

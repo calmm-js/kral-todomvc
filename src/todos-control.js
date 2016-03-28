@@ -1,8 +1,8 @@
-import Atom from "kefir.atom"
+import Atom                        from "kefir.atom"
 import K, {bind, classes, fromIds} from "kefir.react.html"
-import L from "partial.lenses"
-import R from "ramda"
-import React from "react"
+import * as L                      from "partial.lenses"
+import R                           from "ramda"
+import React                       from "react"
 
 import {hash} from "./window"
 
