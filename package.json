@@ -2,13 +2,14 @@
   "name": "kral-todomvc",
   "private": true,
   "scripts": {
-    "build": "export NODE_ENV=production && browserify src\/todomvc.js -t babelify -t envify -g uglifyify > public\/app.js",
+    "build": "export NODE_ENV=production && browserify src/todomvc.js -t babelify -t envify -g uglifyify > public/app.js",
     "lint": "eslint src test",
     "prepublish": "npm run lint && npm run build",
-    "watch": "watchify src\/todomvc.js -v -t [ babelify --sourceMaps=inline ] -o public\/app.js"
+    "watch": "watchify src/todomvc.js -v -t [ babelify --sourceMaps=inline ] -o public/app.js"
   },
   "license": "MIT",
   "dependencies": {
+    "atom.storage": "^0.1.0",
     "kefir": "^3.2.1",
     "kefir.atom": "^2.0.0",
     "kefir.react.html": "^2.0.0",
