@@ -17,7 +17,7 @@ const route = K(hash, h => routes.find(r => r.hash === h) || routes[0])
 
 const Todo = ({todo, editing = Atom(false)}) =>
   <K.li {...classes(K(todo, todo =>
-                      L.view(M.Todo.completed, todo) && "completed"),
+                      L.get(M.Todo.completed, todo) && "completed"),
                     K(editing, "editing", R.and))}>
     <K.input className="toggle"
              type="checkbox"
