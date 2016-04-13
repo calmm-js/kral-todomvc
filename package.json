@@ -11,9 +11,9 @@
   "dependencies": {
     "atom.storage": "^0.1.0",
     "kefir": "^3.2.1",
-    "kefir.atom": "^2.1.0",
-    "kefir.react.html": "^3.1.0",
-    "partial.lenses": "^2.2.1",
+    "kefir.atom": "^2.2.1",
+    "kefir.react.html": "^3.2.1",
+    "partial.lenses": "^3.1.0",
     "ramda": "^0.21.0",
     "react": "^15.0.1",
     "react-dom": "^15.0.1",

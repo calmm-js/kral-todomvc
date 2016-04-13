@@ -1,4 +1,4 @@
-import Kefir from "kefir"
+import * as Kefir from "kefir"
 
 export const hash =
   Kefir.fromEvents(window, "hashchange")
