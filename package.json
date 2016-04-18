@@ -9,11 +9,11 @@
   },
   "license": "MIT",
   "dependencies": {
-    "atom.storage": "^0.1.0",
+    "atom.storage": "^0.2.0",
     "kefir": "^3.2.1",
     "kefir.atom": "^2.2.1",
     "kefir.react.html": "^3.2.1",
-    "partial.lenses": "^3.1.0",
+    "partial.lenses": "^3.3.1",
     "ramda": "^0.21.0",
     "react": "^15.0.1",
     "react-dom": "^15.0.1",
@@ -31,8 +31,8 @@
     "babelify": "^7.2.0",
     "browserify": "^13.0.0",
     "envify": "^3.4.0",
-    "eslint": "^2.7.0",
-    "eslint-plugin-react": "^4.3.0",
+    "eslint": "^2.8.0",
+    "eslint-plugin-react": "^5.0.1",
     "uglifyify": "^3.0.1",
     "watchify": "^3.7.0"
   }
