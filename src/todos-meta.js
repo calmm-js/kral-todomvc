@@ -1,4 +1,4 @@
-import * as L from "partial.lenses"
+import P, * as L from "partial.lenses"
 import * as R from "ramda"
 
 const completed = "completed"
@@ -15,8 +15,7 @@ export const Todo = {
 }
 
 export const All = {
-  allDone: L.lens(R.all(isCompleted),
-                  (completed, its) => its.map(it => ({...it, completed}))),
+  allDone: L.lens(R.all(isCompleted), L.set(P(L.sequence, completed))),
   allActive: R.all(isActive),
   numActive: R.pipe(R.filter(isActive), R.length),
   isEmpty: R.pipe(R.length, R.equals(0)),
